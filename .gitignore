@@ -3,3 +3,4 @@ Steps.txt
 env
 outputs
 utils/__pycache__
+*.pdf

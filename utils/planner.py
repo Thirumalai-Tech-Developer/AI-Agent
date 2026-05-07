@@ -72,13 +72,19 @@ FINAL CHECK:
 - Only UI-related steps
 - Valid JSON only
 
-Note: 
+Note:
 don't copy the styling config as is, it's just an example. you can modify it as per the requirements of the project.
+All components the useful components i have already no need to give as steps
 
-OUTPUT FORMAT:
+INPUT: Create a portfolio website use theme(dark git + purple). with some attachments of link, details, conact details and more...
+
+NOTE: if user doesnt specify a theme, you can use a any theme you want, but if they do specify a theme, make sure to reflect that in the styling config and steps.
+the ouput formte theme is just an example, its not purpule and dark git theme, you can modify the colors as per the requirements of the project, but make sure to reflect the theme in the styling config and steps.
+
+OUTPUT FORMAT(THIS IS ONLY AN EXAMPLES, DO NOT COPY AS IS, MODIFY AS PER THE REQUIREMENTS OF THE PROJECT):
 {{
-  "task": "",
-  "total_steps": 0,
+  "task": "Create a portfolio website",
+  "total_steps": 2,
   "config": {{
     "styling": {{
       "framework": "tailwindcss",
@@ -118,10 +124,15 @@ OUTPUT FORMAT:
   "steps": [
     {{
       "step": 1,
-      "name": "",
-      "prompt": "",
-      "input": [],
-      "output": ""
+      "name": "Create homepage layout",
+      "prompt": "Create a bueatiful homepage layout for a portfolio website with a dark git + purple theme. The homepage should include a header with navigation, a hero section with an introduction, a projects section showcasing work, and a contact form. Use the provided styling config for colors and fonts.",
+      "input": [YOU_NEED_GIVE_DETAILS_OF INPUT_FOR_HOME_PAGE_DETAILS_ONLY],
+    }},
+    {{
+      "step": 2,
+      "name": "Create project pages",
+      "prompt": "Create detailed project pages for each item in the portfolio. Each page should include a description, images, and links to the live project or source code. Use the provided styling config for colors and fonts.",
+      "input": [YOU_NEED_GIVE_DETAILS_OF INPUT_FOR_PROJECT_PAGES_ONLY],
     }}
   ]
 }}

@@ -4,44 +4,41 @@ import os
 import json
 from datetime import datetime
 from utils.planner import planner
+from utils import extractor
 
 load_dotenv()
 
-api_key = os.getenv("API_KEY_1")
+ATTACHMENTS = True
+api_key = os.getenv("API_KEY_2")
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=api_key,
 )
 
-prompt = "create a portfolio website use theme(dark git + purple)"
+prompt = "create a portfolio website use theme(dark git + purple). using these theme"
+
+attachments_text = ""
+if ATTACHMENTS:
+    attachments_text = extractor.extract_text_from_pdf("./Thirumalai.pdf")
+
+prompt += "\n\nHere are some attachments that might be useful:\n" + attachments_text
 planned_task = planner(prompt)
-
-# completion = client.chat.completions.create(
-#     model="nvidia/nemotron-3-super-120b-a12b:free",
-#     messages=[
-#         {
-#             "role": "system",
-#             "content": "You are a strict JSON generator. Always return valid JSON only."
-#         },
-#         {
-#             "role": "user",
-#             "content": planned_task
-#         }
-#     ],
-#     temperature=0.6
-# )
-
-# output_text = completion.choices[0].message.content.strip()
 
 
 completion = client.chat.completions.create(
-    model="openai/gpt-oss-120b:free",
+    model="tencent/hy3-preview:free",
     messages=[
-        {"role": "system", "content": "Return only valid JSON."},
-        {"role": "user", "content": planned_task}
+        {
+            "role": "system",
+            "content": "You are a strict JSON generator. Always return valid JSON only."
+        },
+        {
+            "role": "user",
+            "content": planned_task
+        }
     ],
-    temperature=0.3,
+    temperature=0.6,
     stream=True
 )
 
