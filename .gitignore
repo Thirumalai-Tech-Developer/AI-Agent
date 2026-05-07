@@ -4,3 +4,5 @@ env
 outputs
 utils/__pycache__
 *.pdf
+test.py
+*/*/*.db

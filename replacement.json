@@ -1,0 +1,7 @@
+{
+  "path": "C:/Users/thiru/Documents/AI Agent Frontend/main.py",
+  "error": "SyntaxError: invalid syntax",
+  "line": 77,
+  "replacement": "return a + b",
+  "intendation": 4
+}
