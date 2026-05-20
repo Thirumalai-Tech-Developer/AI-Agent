@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 from utils.planner import planner
 from utils import extractor, executor, key_router
+from google import genai
 
 load_dotenv()
 PLAN_PATH = 'outputs/plan'
@@ -12,109 +13,122 @@ STEP_PATH = 'outputs/step'
 ATTACHMENTS = True
 BASE_WEB_PATH = 'test/'
 CURRENT_KEY = 1
-api_key = os.getenv("API_KEY_2")
+api_key = os.getenv("API_KEY_1")
 
-# prompt = "create a portfolio website use theme(dark git + purple). using these theme"
+# prompt = "create a portfolio website use theme(dark + purple). glowing effect in hero section"
 
 # attachments_text = ""
 # if ATTACHMENTS:
 #     attachments_text = extractor.extract_text_from_pdf("./Thirumalai.pdf")
 
 # prompt += "\n\nHere are some attachments that might be useful:\n" + attachments_text
-# planned_task = planner(prompt)
+# prompt += planner(prompt)
 
-with open('outputs/gtking.json', 'r') as f:
+gemini_key = os.getenv("GEMINI_API_KEY")
+
+with open('outputs/hello.json', 'r') as f:
     planned_task = json.load(f)
 
-total_steps = planned_task['total_steps']
-styling_name = planned_task['config']['styling']['styling_name']
-print(styling_name)
-step = planned_task['steps'][1]
+for i in range(2):
+    total_steps = planned_task['total_steps']
+    styling_name = planned_task['config']['styling']['styling_name']
+    print(styling_name)
+    step = planned_task['steps'][i+1]
 
-step = f"{step}"
-print(type(step))
-prompt = executor.step_execute(step)
+    step = f"{step}"
+    print(type(step))
+    print(step)
+    prompt = executor.step_execute(step)
 
-def model_response(planned_task):
+    client = genai.Client(api_key=gemini_key)
 
-    global CURRENT_KEY, api_key
+    stream = client.models.generate_content_stream(
+        model="gemini-3-flash-preview",
+        contents=prompt
+    )
+    full_output = ""
 
-    while True:
-        try:
+    for chunk in stream:
+        if chunk.text:
+            print(chunk.text, end="")
+            full_output += chunk.text
 
-            client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=api_key,
-            )
+    print("##### FINISHER ######")
 
-            completion = client.chat.completions.create(
-                model="deepseek/deepseek-v4-flash:free",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a strict JSON generator. Always return valid JSON only."
-                    },
-                    {
-                        "role": "user",
-                        "content": planned_task
-                    }
-                ],
-                temperature=0.6,
-                # extra_body={"reasoning": 
-                #                 {
-                #                     "enabled": True, 
-                #                     "effort": "xhigh",
-                #                 }
-                #             },
-                stream=True
-            )
+# def model_response(planned_task):
 
-            full_output = ""
+#     global CURRENT_KEY, api_key
 
-            for chunk in completion:
-                if chunk.choices[0].delta.content:
-                    token = chunk.choices[0].delta.content
-                    print(token, end="", flush=True)
-                    full_output += token
+#     while True:
+#         try:
 
-            print("\n\n--- DONE ---")
+#             client = OpenAI(
+#                 base_url="https://openrouter.ai/api/v1",
+#                 api_key=api_key,
+#             )
 
-            return full_output
+#             completion = client.chat.completions.create(
+#                 model="deepseek/deepseek-v4-flash:free",
+#                 messages=[
+#                     {
+#                         "role": "system",
+#                         "content": "You are a strict JSON generator. Always return valid JSON only."
+#                     },
+#                     {
+#                         "role": "user",
+#                         "content": planned_task
+#                     }
+#                 ],
+#                 temperature=0.4,
+#                 stream=True,
+#             )
 
-        except Exception as e:
+#             full_output = ""
 
-            error = str(e)
+#             for chunk in completion:
+#                 if chunk.choices[0].delta.content:
+#                     token = chunk.choices[0].delta.content
+#                     print(token, end="", flush=True)
+#                     full_output += token
 
-            if "429" in error:
-                print("Rate limit exceeded. Switching API key.", error)
+#             print("\n\n--- DONE ---")
 
-                CURRENT_KEY = key_router.key_router(CURRENT_KEY)
-                api_key = os.getenv(f"API_KEY_{CURRENT_KEY}")
+#             return full_output
 
-                continue
+#         except Exception as e:
 
-            raise e
+#             error = str(e)
 
-full_output = model_response(prompt)
+#             if "429" in error:
+#                 print("Rate limit exceeded. Switching API key.", error)
+
+#                 CURRENT_KEY = key_router.key_router(CURRENT_KEY)
+#                 api_key = os.getenv(f"API_KEY_{CURRENT_KEY}")
+
+#                 continue
+
+#             raise e
+
+# full_output = model_response(prompt)
 
 
-try:
-    json_start = full_output.find("{")
-    json_end = full_output.rfind("}") + 1
-    clean_json = full_output[json_start:json_end]
+    try:
+        json_start = full_output.find("{")
+        json_end = full_output.rfind("}") + 1
+        clean_json = full_output[json_start:json_end]
 
-    parsed = json.loads(clean_json)
+        parsed = json.loads(clean_json)
 
-except Exception as e:
-    print("JSON parsing failed:", e)
-    parsed = {"error": "invalid_json", "raw": full_output}
+    except Exception as e:
+        print("JSON parsing failed:", e)
+        parsed = {"error": "invalid_json", "raw": full_output}
 
-# # SAVE OUTPUT
-os.makedirs(STEP_PATH, exist_ok=True)
-filename = f"{STEP_PATH}/output_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # # SAVE OUTPUT
+    os.makedirs(STEP_PATH, exist_ok=True)
+    filename = f"{STEP_PATH}/{i+1}.json"
 
-with open(filename, "w", encoding="utf-8") as f:
-    json.dump(parsed, f, indent=2)
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(parsed, f, indent=2)
 
-print("Saved:", filename)
+    print("Saved:", filename)
 
