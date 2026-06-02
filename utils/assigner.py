@@ -3,7 +3,6 @@ import subprocess
 import json
 import time
 
-
 VALID_SHADCN = {
     'accordion','alert','alert-dialog','aspect-ratio','avatar','badge','breadcrumb',
     'button','calendar','card','carousel','chart','checkbox','collapsible','command',
@@ -14,10 +13,7 @@ VALID_SHADCN = {
     'toggle-group','tooltip'
 }
 
-MAX_WORKERS = 4  # tune to your CPU / number of components
-
-
-# ── Helpers ────────────────────────────────────────────────────────────────────
+MAX_WORKERS = 4 
 
 def load_json(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -34,7 +30,6 @@ def load_json(path: str) -> dict:
     if not isinstance(data, dict):
         raise ValueError(f"Could not extract dict from: {path}")
     return data
-
 
 def sanitize_shadcn_command(command_str: str) -> str:
     if 'shadcn' not in command_str or ' add ' not in command_str:
@@ -55,34 +50,42 @@ def sanitize_shadcn_command(command_str: str) -> str:
         return ""
     return ' '.join(prefix + ['--yes'] + valid)
 
-
-def run_command(command, cwd=None, input_text=None):
+def run_command(command, cwd=None, input_text=None, max_retries=3):
     if isinstance(command, list) and len(command) >= 3:
         sanitized = sanitize_shadcn_command(command[-1])
         if not sanitized:
             print("[run_command] Skipped.")
-            return
+            return True
         command = command[:-1] + [sanitized]
-    process = subprocess.Popen(
-        command, cwd=cwd,
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT, text=True, shell=False,
-    )
-    try:
-        output, _ = process.communicate(input=input_text, timeout=60)
-        print(output, end="")
-    except subprocess.TimeoutExpired:
-        print("\n[WARNING] Timed out.")
-        for i in range(5, 0, -1):
-            print(f"Killing in {i}...", end="\r")
-            time.sleep(1)
-        process.kill()
-        process.communicate()
-        raise Exception(f"Timed out: {' '.join(command)}")
-    print(f"\nExit Code: {process.returncode}")
-    if process.returncode != 0:
-        raise Exception(f"Command failed: {' '.join(command)}")
 
+    for attempt in range(1, max_retries + 1):
+        process = subprocess.Popen(
+            command, cwd=cwd,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, text=True, shell=False,
+        )
+        try:
+            output, _ = process.communicate(input=input_text, timeout=60)
+            print(output, end="")
+            
+            if process.returncode == 0:
+                return True
+            else:
+                print(f"\n[WARNING] Command failed with exit code {process.returncode}.")
+        except subprocess.TimeoutExpired:
+            print("\n[WARNING] Timed out.")
+            for i in range(3, 0, -1):
+                print(f"Killing in {i}...", end="\r")
+                time.sleep(1)
+            process.kill()
+            process.communicate()
+
+        if attempt < max_retries:
+            print(f"[RETRY] Retrying command ({attempt}/{max_retries}) in 2s...")
+            time.sleep(2)
+        else:
+            print(f"[SKIP] Skipping command after {max_retries} failed attempts.")
+            return False
 
 def code_assigner(file_path: str, code: str):
     code = code.replace("\\n", "\n").replace('\\"', '"')
@@ -94,16 +97,7 @@ def code_assigner(file_path: str, code: str):
     except Exception as e:
         print(f"  Error writing {file_path}: {e}")
 
-
-# ── Task runner (one full task = one step file, runs in a thread) ──────────────
-
 def run_task(i: int, total_tasks: int, project_root: str = "spiderman") -> tuple[int, bool]:
-    """
-    Execute all steps inside outputs/step/{i}.json sequentially.
-    Steps within a task MUST stay sequential (deps → files → code order).
-    Safe to run in parallel with other tasks since each writes different files.
-    Returns (i, success).
-    """
     step_file = f"outputs/step/{i}.json"
     tag = f"[Task {i+1}/{total_tasks}]"
 
@@ -120,13 +114,10 @@ def run_task(i: int, total_tasks: int, project_root: str = "spiderman") -> tuple
         print(f"{tag} No steps found — skipping.")
         return i, False
 
-    print(f"\n{'='*50}")
-    print(f"{tag} {total_steps} steps")
-    print(f"{'='*50}")
+    print(f"\n{'='*50}\n{tag} {total_steps} steps\n{'='*50}")
 
     for j, step in enumerate(steps, start=1):
         if not isinstance(step, dict):
-            print(f"{tag} Step {j}: invalid format — skipping.")
             continue
 
         step_type   = step.get("type", "")
@@ -139,23 +130,19 @@ def run_task(i: int, total_tasks: int, project_root: str = "spiderman") -> tuple
         try:
             if step_type == "Terminal Command":
                 if code.strip():
-                    # Dynamic directory context for the command execution
                     run_command(["cmd", "/c", code], cwd=project_root)
                 else:
                     print(f"{tag} [SKIP] Empty command.")
 
             elif step_type == "File Creation":
                 if target_file:
-                    # Dynamically routes the file path based on project root
                     full_path = os.path.join(project_root, target_file)
                     os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                    with open(full_path, "w", encoding="utf-8") as f:
-                        pass
+                    with open(full_path, "w", encoding="utf-8") as f: pass
                     print(f"{tag} Created: {full_path}")
 
-            else:  # Code / Configuration
+            else:  
                 if target_file and code.strip():
-                    # Dynamically routes the target write directory
                     full_path = os.path.join(project_root, target_file)
                     code_assigner(full_path, code)
                 else:

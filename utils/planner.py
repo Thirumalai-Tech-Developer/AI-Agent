@@ -154,6 +154,7 @@ RULES:
 - global_css must be COMPLETE — adapt colors to match requested theme
 - Use oklch() color space
 - Use wouter for routing
+- no need to generate the entire tsx file code thats will do by your giving prompt
 
 ID RULES:
 - Navbar root:   id="navbar"
@@ -161,7 +162,7 @@ ID RULES:
 - Every page/section root: id matching its registry entry
 - Navbar nav links use href="#section-id" for same-page, href="/route" for pages
 - Footer quick links mirror the same ids/routes
-- in links like github, linkedin, twitter, facebook means use this {code}
+- in links like github, linkedin, twitter, facebook means use this {code}. just metion in using placing. in prompt
 
 
 CSS REFERENCE (adapt hue/lightness to match theme, keep structure):
