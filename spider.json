@@ -1,0 +1,49 @@
+{
+  "task": "Build a modern, immersive Spider-Man themed website with specialized web-based animations and multi-page routing.",
+  "total_steps": 5,
+  "config": {
+    "styling": {
+      "framework": "tailwindcss",
+      "global_css": "@import \"tailwindcss\"; @import \"tw-animate-css\"; @import \"shadcn/tailwind.css\"; @import \"@fontsource-variable/geist\"; @custom-variant dark (&:is(.dark *)); @theme inline { --font-sans: 'Geist Variable', sans-serif; } :root { --background: oklch(0.08 0.02 285); --foreground: oklch(0.98 0.005 285); --primary: oklch(0.65 0.28 25); --primary-foreground: oklch(0.98 0 0); --secondary: oklch(0.20 0.05 285); --secondary-foreground: oklch(0.95 0.01 285); --border: oklch(0.25 0.02 285); } @layer base { * { @apply border-border outline-ring/50; } body { @apply bg-background text-foreground; } }",
+      "styling_name": [
+        "bg-background",
+        "text-foreground",
+        "bg-primary",
+        "bg-secondary",
+        "border-border"
+      ]
+    }
+  },
+  "steps": [
+    {
+      "step": 1,
+      "name": "create_navigation_and_layout",
+      "prompt": "Create a Navigation component (Header.tsx) with an id='nav'. Include links to Home, Suit Gallery, and About. Style it with a glassmorphism effect using bg-secondary/80 and backdrop-blur. Add a sticky position. Ensure it uses standard React routing components.",
+      "input": "Sticky header with Spidey-red branding and nav links."
+    },
+    {
+      "step": 2,
+      "name": "create_home_page",
+      "prompt": "Create Home.tsx (id='home'). Implement a hero section with a bold title 'SPIDER-VERSE'. Integrate a 'Web Marquee' component that animates SVG-based web patterns across the top and bottom of the hero section using infinite X-axis scrolling animations. Use bg-background and gradient text from primary to secondary.",
+      "input": "Hero section with web marquee, background using primary/secondary gradients."
+    },
+    {
+      "step": 3,
+      "name": "create_suit_gallery",
+      "prompt": "Create SuitGallery.tsx (id='suit-gallery'). This page should showcase different Spider-Man suits in a grid layout. Each card should have hover effects (scale-up). Use bg-card with border-primary. Include a filter section to sort by 'Classic', 'MCU', and 'Multiverse'.",
+      "input": "Interactive suit cards with hover effects."
+    },
+    {
+      "step": 4,
+      "name": "create_about_page",
+      "prompt": "Create About.tsx (id='about'). Add a section detailing Spider-Man's lore. Use a two-column layout: one for a striking image, one for typography. Use bg-secondary for the container and ensure responsiveness (stacked on mobile). Add subtle 'spider-web' border accents using CSS.",
+      "input": "Lore section with balanced layout."
+    },
+    {
+      "step": 5,
+      "name": "compose_app_routing",
+      "prompt": "Update App.tsx to include React Router configuration. Wrap the components (Header, Home, SuitGallery, About) in a Main layout. Ensure proper routing to '/home', '/suit-gallery', and '/about'. Ensure the theme remains dark throughout.",
+      "input": "Integrate routing using react-router-dom."
+    }
+  ]
+}
