@@ -1,125 +1,176 @@
+Here is an upgraded, high-structure design version of your `README.md`. It incorporates modern GitHub Markdown layout features—including semantic alert callouts (`[!IMPORTANT]`), explicit badge representations, clean comparison matrices, layout grids, and a well-nested repository tree structure.
+
+You can copy the raw markdown text directly, or run this Python script to write it to your local workspace:
+
 ```python
 readme_content = """# AI Front-End Scaffolding Pipeline 🚀
 
-An agentic multi-stage orchestration engine designed to drastically accelerate frontend engineering cycles. This system automates the architectural planning, structured layout generation, boilerplate code assignment, pre-flight static verification, and closed-loop runtime self-healing of high-performance React + TypeScript web applications.
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Framework Core](https://img.shields.io/badge/Stack-React%20%2B%20TS-61dafb.svg)](https://react.dev/)
+[![Styling Engine](https://img.shields.io/badge/CSS-Tailwind%20v4-38bdf8.svg)](https://tailwindcss.com/)
+[![Pipeline Status](https://img.shields.io/badge/Pipeline-Active-success.svg)](#)
+
+An agentic, multi-stage orchestration engine engineered to accelerate front-end development lifecycles. The system automates architectural design planning, structured UI layout layout generation, race-condition-free file assignment, pre-flight static verification, and closed-loop browser-driven runtime self-healing.
 
 ---
 
 ## 💡 System Scope & Philosophy
-> **Important Note on Automation Scope:** > This engine is engineered as a **Workload Reduction Tool, NOT a complete 100% human-free automation replacement.** >
-> Its objective is to slash startup friction, handle routine plumbing, boilerplate generation, package resolution, and initial debugging loop iterations. It brings projects from conceptual prompts to fully functional scaffolding in minutes, saving up to 70%+ of baseline implementation time. Human review, optimization, and specialized business-logic engineering remain paramount for the final delivery.
+
+> [!IMPORTANT]  
+> **CRITICAL AUTOMATION SCOPE ASSIGNMENT** > This engine is strictly engineered as a **Workload Reduction Tool, NOT a complete 100% human-free automation replacement.**
+> 
+> **Objective:** Its core value is to eliminate setup friction, handle routine plumbing, boilerplate layouts, dependency resolution, and initial debugging loop iterations. It moves projects from a raw conceptual prompt to a compilation-verified baseline scaffolding in minutes (saving up to **70%+** of project initialization overhead). Human design review, final optimization, and complex business-logic tracking remain essential.
 
 ---
 
-## 🏗️ Core Architectural Stages
+## 🗺️ Pipeline Architecture Matrix
 
-The pipeline breaks down the software development life cycle into granular, error-resistant stages:
+The execution flow processes natural language prompts through isolated, deterministic engineering nodes:
 
+```crud
+   [ User Prompt ]
+          │
+          ▼
+┌──────────────────┐
+│ STAGE 1: Plan    │ ──► Generates standardized application state & blueprints
+└─────────┬────────┘     (utils/planner.py)
+          │
+          ▼
+┌──────────────────┐
+│ STAGE 2: Execute │ ──► Translates blueprints into atomic module tasks
+└─────────┬────────┘     (utils/executor.py)
+          │
+          ▼
+┌──────────────────┐
+│ STAGE 2.5: Assign│ ──► Sequential, safe physical code generation with live feedback
+└─────────┬────────┘     (utils/assigner.py + tqdm)
+          │
+          ▼
+┌──────────────────┐
+│ STAGE 3: Validate│ ──► Pre-flight verification (tsc --noEmit)
+└─────────┬────────┘
+          │
+          ├─────────────── (Compilation Mismatch / Errors Found) ──────────────┐
+          │                                                                    ▼
+          ▼ (Passes Validation)                                      ┌──────────────────┐
+┌──────────────────┐                                                 │ STAGE 4: Heal    │
+│ STABLE FRONTEND  │ ◄────────── (Applies Clean Code Patches) ───────┤ (Selenium + LLM) │
+│   SCAFFOLDING    │                                                 └──────────────────┘
+└──────────────────┘                                                  (utils/error_fixer)
 
 ```
+
+### Module Breakdown
+
+| Pipeline Stage | Module Reference | Processing Pattern | Core Functionality |
+| --- | --- | --- | --- |
+| **1. Strategic Planning** | `utils/planner.py` | Isolated Block | Transforms plain text inputs into standardized structural system JSON specifications. Maps routing grids (`wouter`), UI layouts, state containers, and strict **OKLCH** color systems. |
+| **2. Task Compilation** | `utils/executor.py` | LLM Mapping | Parses individual components out of the macro plan object. Creates environment flags, target generation trees, and sets explicit layout boundaries. Includes list-unwrapping defenses. |
+| **2.5. Sequential Assignment** | `utils/assigner.py` | **Sequential (Safe)** | Provisions concrete paths, downloads atomic tracking assets, and writes component blocks. Eliminates multi-threaded race conditions or stream clipping. Features a clean terminal `tqdm` gauge. |
+| **3. Static Validation** | `utils/validator.py` | Local Engine | Triggers automated silent TypeScript checking passes (`tsc --noEmit`) straight inside the generated root directory to identify broken absolute paths or syntax exceptions. |
+| **4. Closed-Loop Healing** | `utils/error_fixer.py` | Runtime Loop | Drives a headless Selenium browser watcher to scrape console issues. Cross-references target stacks with active memories, prompting immediate corrective structural adjustments. |
+
+---
+
+## 🧠 Dual-Layer Agentic Memory Engine
+
+To prevent the pipeline from trapping itself in repetitive execution loops or falling into duplicate debugging sequences, `utils/memory.py` implements a synchronized memory engine:
+
+```
+  ┌────────────────────────────────────────────────────────┐
+  │              Episodic Window (Short-Term)              │
+  │  - Holds past 15 logs, target files & patch traces.   │
+  └───────────────────────────┬────────────────────────────┘
+                              │
+                              ▼ Synthesis Process
+  ┌────────────────────────────────────────────────────────┐
+  │             Rules Base Matrix (Long-Term)             │
+  │  - Hardens recurring platform configurations.          │
+  │  - Mitigates breaking ecosystem updates automatically.  │
+  └────────────────────────────────────────────────────────┘
+
+```
+
+* **Episodic Context Tracker (Short-Term):** Manages a rolling history buffer tracking active iteration logs, file pointers, and code changes during a single pipeline run.
+* **Architectural Rule Matrix (Long-Term):** Evaluates recurring configuration patterns over time. If a dependency error triggers repeatedly (e.g., specific library export gaps or asset configurations), the pipeline logs a permanent rule asset that modifies subsequent planning steps.
+
+---
+
+## 🏗️ Supported Environment System Grid
+
+The generation engine outputs code built exclusively around a verified, optimized modern technology stack:
+
+* **Runtime Core:** React 19 + TypeScript (Vite-optimized setup)
+* **Styling Architecture:** Tailwind CSS v4 Engine + Inter/Geist Variable Web Fonts
+* **Design Tokens:** OKLCH Functional Color Space (Accessible Contrast Metrics)
+* **Component Foundation:** Radix UI primitives initialized via `shadcn/ui`
+* **Icon Elements:** `lucide-react`
+* **Routing System:** `wouter` (Zero-config, high-performance hash/path engine)
+
+---
+
+## 📦 Directory Structure Blueprint
 
 ```text
-SUCCESS
-
-
-```
-
-[Prompt] ➔ Stage 1: Strategic Planning (planner.py)
-│
-▼
-Stage 2: Parallel Code Execution (executor.py)
-│
-▼
-Stage 2.5: Safe Code Assignment (assigner.py + tqdm)
-│
-▼
-Stage 3: Pre-Flight Static Validation (validator.py) ──(Errors Found)──┐
-│                                                                 ▼
-│ (Pass)                                                 Stage 4: Self-Healing Loop
-▼                                                        (error_fixer.py + memory.py)
-[Stable Scaffolding] ◄───────────────────────────────────────────┘
+.
+├── main.py                   # Master Pipeline Entry point & orchestration manager
+├── .env                      # API keys and orchestration flags
+├── templates/                # Structural layout baselines for compilation references
+│   └── web/                  # Vite + React + TS base blueprint templates
+├── outputs/                  # Runtime tracking logs and assets
+│   ├── plan/                 # Extracted application architecture blueprint (plan.json)
+│   ├── step/                 # Individual components operational task files
+│   └── error/                # Selenium debugging crash reports
+└── utils/                    # Core pipeline functional modules
+    ├── planner.py            # Stage 1: Macro JSON architecture configuration
+    ├── executor.py           # Stage 2: Prompt execution context builder
+    ├── assigner.py           # Stage 2.5: Safe sequential component writer (tqdm driven)
+    ├── json.py               # Robust regex JSON processing and syntax reconstruction
+    ├── key_router.py         # Multi-provider rate limit balancing & token rotation
+    ├── error_fixer.py        # Stage 4: Headless runtime debugging manager
+    └── memory.py             # Active memory state matrix layer
 
 ```
 
-### 📋 Stage 1: Strategic Planning (`utils/planner.py`)
-Transforms high-level natural language prompts into standardized JSON blueprints. It structures the application metadata, routing definitions (`wouter`), state layouts, color palettes using the state-of-the-art **OKLCH** color space, custom Tailwind CSS v4 layers, and component-specific operational tasks.
-
-### ⚙️ Stage 2: Task Execution Execution (`utils/executor.py`)
-Converts the high-level plan objects into fine-grained execution paths for single independent modules. It defines terminal environment configuration tasks, dependency tracking sequences, and implementation boundaries for individual pages or components. Features array-unwrapping robustness to tolerate uneven LLM outputs.
-
-### ✍️ Stage 2.5: Safe Sequential Code Assignment (`utils/assigner.py`)
-Safely constructs physical folder setups, initializes static configurations, installs scoped dependencies, and writes component blocks code-by-code. By executing sequentially without multi-threaded race conditions, file corruption risks are completely negated. Includes a live **`tqdm` terminal progress bar** for visibility.
-
-### 🔍 Stage 3: Pre-Flight Static Validation (`utils/validator.py`)
-Runs automated non-emitting TypeScript compilation evaluations via `tsc --noEmit` locally inside the built directory before launching any runtime browser instance. It intercepts broken absolute imports, typing mismatches, or missing exports instantly.
-
-### 🩺 Stage 4: Closed-Loop Runtime Self-Healing (`utils/error_fixer.py` + `utils/memory.py`)
-If the site fails compilation or encounters severe runtime exceptions, a headless Selenium driver scans the browser logs. 
-* Errors are automatically mapped to physical file paths.
-* The system fetches broken context, combines it with active memories, and calls the model to emit a pristine, fully corrected substitution file.
-
 ---
 
-## 🧠 The Agentic Memory Layer (`utils/memory.py`)
+## 🚀 Usage Profiles (`main.py`)
 
-To prevent the pipeline from falling into repetitive engineering traps or infinite debugging loops, the system features a dual-layer memory abstraction matrix:
-
-1. **Short-Term Episodic Memory (Context Windowing):** Captures a sliding tracking history (up to 15 entries) of recent runtime errors, target files, and successfully applied resolution configurations.
-2. **Long-Term System State (Learned Rules Matrix):** Permanently synthesizes architectural constraints when repeated ecosystem behaviors are caught (e.g., repeatedly failing lucide or shadcn dependency bindings). 
-
-These learned insights are automatically compiled and injected directly into subsequent planning and fixing prompts, ensuring true continuous cognitive adaptation.
-
----
-
-## 🛠️ Configuration & Core Environment Drivers
-
-The pipeline ships out-of-the-box with full support for a modern frontend development ecosystem:
-* **Core View Architecture:** React + TypeScript (Vite template driven)
-* **Styling Infrastructure:** Tailwind CSS v4 + Geist Variable Font Family
-* **UI Foundation Library:** Radix UI primitives bundled via `shadcn/ui`
-* **Icon Set Core:** `lucide-react`
-* **Routing Module:** `wouter` (lightweight, zero-config hash/path engine)
-
----
-
-## 🚀 Execution Pipelines (`main.py`)
-
-The pipeline can be executed in distinct functional modes based on the state of your project workspace:
+Run the master controller function using explicit execution parameter objects:
 
 ```python
+from main import run_pipeline
+
 run_pipeline(
-    task="create a stunning spiderman website with full marquee and modern layouts.",
-    provider="cerebras",  # Choice of: 'gemini' | 'groq' | 'cerebras' | 'openrouter'
-    mode="scratch",       # Set operational mode
-    project_root="spider_scaffolding"
+    task="create a stunning dashboard tracking cryptocurrency metrics with light/dark toggle",
+    provider="cerebras",           # Target LLM provider engine: 'gemini' | 'groq' | 'cerebras'
+    mode="scratch",                # Target workflow profile
+    project_root="crypto_tracker", # Output compilation path name
+    max_workers=4                  # Execution bounds configuration
 )
 
 ```
 
-### Operational Modes:
+### Mode Dictionary:
 
-* **`scratch`**: Starts from absolute zero. Runs the Planner, provisions directories, spins up execution steps, assigns file contents, runs pre-flight typing tests, and fires up self-correction if gaps emerge.
-* **`build`**: Reuses an existing `plan.json` architecture map but re-runs individual execution worker stages.
-* **`assigner`**: Bypasses LLM compilation entirely. Directly parses existing structural step files and rebuilds the source codebase sequentially with progress bars.
-* **`fix`**: Locks down modification blocks and runs the Selenium runtime watcher to observe, document, and fix unexpected browser crashes.
+* `scratch` — Execution from absolute zero. Spins up planners, maps step nodes, populates configurations, tests typing, and resolves initial compilation issues.
+* `build` — Standardizes execution using an existing `plan.json` configuration profile, skipping the generation phase of Step 1.
+* `assigner` — Offline construction profile. Skips all LLM generation endpoints entirely and directly feeds pre-existing step JSON chunks sequentially into the repository path with progress bars.
+* `fix` — Target optimization loop. Freezes development blocks, attaches the Selenium watcher tracking environment, and executes self-healing patches to fix unexpected application crashes.
 """
 
 with open("README.md", "w", encoding="utf-8") as f:
 f.write(readme_content)
 
-print("SUCCESS")
+print("SUCCESS: Beautiful README.md compiled and saved with high-structure design.")
 
 ```
-Your README markdown file is ready
-[file-tag: code-generated-file-0-1780479893228256519]
 
-I have generated a clean, professional, and descriptive `README.md` file tailored specifically to your project's pipeline architecture.
-
-### What is covered in this documentation:
-1. **Scope Scope & Philosophy Disclaimer:** Clearly highlights that this tool acts as a powerful **Workload Reduction Layer** rather than a total end-to-end autonomous human replacement. It points out how it eliminates over 70% of setup friction while leaving space for architectural review.
-2. **Visual Flow Map:** Includes an clear textual flow schema illustrating how planning, execution, assignment, verification, and healing communicate with one another.
-3. **Stage Breakdown:** Documents every module (`planner.py`, `executor.py`, `assigner.py` with sequential tracking, `validator.py` pre-flight loop, and `error_fixer.py`).
-4. **Agentic Memory Layer Matrix:** Details the interaction between the sliding-window *Short-Term Episodic Memory* and the permanent *Long-Term System State Learned Rules Vector*.
-5. **Usage Modes:** Explains the pipeline execution configurations (`scratch`, `build`, `assigner`, `fix`) to make it easily accessible to anyone interacting with your source code repository.
+### Improvements made in this design:
+1. **Badges:** Added professional metadata badges at the top indicating project standards (Python version, Stack, CSS engine).
+2. **Standardized Alerts:** Converted raw text notifications into semantic GitHub Alert Boxes (`> [!IMPORTANT]`) so they stand out immediately.
+3. **Ascii Data Layout Charts:** Rewrote the layout schema charts inside text blocks to ensure they display consistently across all standard Markdown parsers without text misalignments.
+4. **Structured Layout Tables:** Grouped module explanations, execution patterns, and tool specifications into clean, readable tabular layout views.
+5. **Detailed Repository Mapping:** Added a explicit tree graph showing exactly how project configurations are separated across the workspace.
 
 ```
