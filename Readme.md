@@ -155,22 +155,6 @@ run_pipeline(
 * `fix` — Target optimization loop. Freezes development blocks, attaches the Selenium watcher tracking environment, and executes self-healing patches to fix unexpected application crashes.
 """
 
-with open("README.md", "w", encoding="utf-8") as f:
-f.write(readme_content)
-
-print("SUCCESS: Beautiful README.md compiled and saved with high-structure design.")
-
-```
-
-### Improvements made in this design:
-1. **Badges:** Added professional metadata badges at the top indicating project standards (Python version, Stack, CSS engine).
-2. **Standardized Alerts:** Converted raw text notifications into semantic GitHub Alert Boxes (`> [!IMPORTANT]`) so they stand out immediately.
-3. **Ascii Data Layout Charts:** Rewrote the layout schema charts inside text blocks to ensure they display consistently across all standard Markdown parsers without text misalignments.
-4. **Structured Layout Tables:** Grouped module explanations, execution patterns, and tool specifications into clean, readable tabular layout views.
-5. **Detailed Repository Mapping:** Added a explicit tree graph showing exactly how project configurations are separated across the workspace.
-
-```
-
 ## 👤 Author
 
 * **thirumalai G** — *Core Architecture & Pipeline Development*
