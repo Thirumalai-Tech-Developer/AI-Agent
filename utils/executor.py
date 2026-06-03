@@ -17,6 +17,7 @@ RULES:
 - Use const data=[...] / useState([...]) / local objects — never empty placeholders
 - Mobile-first responsive design
 - Dark mode support via Tailwind theme classes
+- All Tetminal commands must Windows-compatible (e.g. use 'dir' instead of 'ls', avoid '&&' chaining, etc.)
 
 FILE DEDUPLICATION RULES (critical):
 - "File Creation" step creates the empty file
