@@ -9,10 +9,10 @@ import webbrowser
 from tqdm import tqdm
 
 from utils import extractor
-from utils.executor import step_execute
-from utils.planner import planner
-from utils.json import extract_json
-from utils.key_router import with_key_rotation, _router
+from utils.executor import build_step_prompt
+from utils.planner import build_plan_prompt
+from utils.json_utils import extract_json
+from utils.key_router import with_key_rotation
 from utils.error_fixer import run_auto_fix
 from utils.assigner import run_task, code_assigner
 from utils.memory import AgenticMemory
@@ -187,11 +187,12 @@ def call_llm(prompt: str, provider: str = "gemini") -> str:
 
 def save_json(path: str, raw_output: str, label: str = "") -> dict | None:
     result = extract_json(raw_output)
-    if not result["success"]:
+
+    if not result.success:
         with open(f"debug_{label}_raw.txt", "w", encoding="utf-8") as f:
             f.write(raw_output)
         return None
-    data = result["data"]
+    data = result.data
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
@@ -229,7 +230,7 @@ def _run_step(i: int, step: dict, plan: dict, provider: str, memory_str: str = "
     try:
         is_app  = _is_app_step(step)
         context = _build_step_context(step, plan, is_app_step=is_app, memory_str=memory_str)
-        prompt  = step_execute(context)
+        prompt  = build_step_prompt(context)
         
         raw  = call_llm(prompt, provider=provider)
         data = save_json(f"{STEP_PATH}/{i}.json", raw, label=f"step_{i}")
@@ -241,10 +242,10 @@ def _run_step(i: int, step: dict, plan: dict, provider: str, memory_str: str = "
         traceback.print_exc()
         return i, None
 
-def run_planner(task: str, provider: str = "gemini", attachment_path: str = None, memory_str: str = "") -> dict | None:
+def run_build_plan_prompt(task: str, provider: str = "gemini", attachment_path: str = None, memory_str: str = "") -> dict | None:
     if attachment_path:
         task += f"\n\nAttachment context:\n{extractor.extract_text_from_pdf(attachment_path)}"
-    raw = call_llm(planner(f"{memory_str}\nTask: {task}"), provider=provider)
+    raw = call_llm(build_plan_prompt(f"{memory_str}\nTask: {task}"), provider=provider)
     return save_json("outputs/plan/plan.json", raw, label="plan")
 
 def run_executor(plan_file: str, provider: str, max_workers: int, memory_str: str = "") -> None:
@@ -368,7 +369,7 @@ def run_pipeline(
         setup_template(template_path, project_root)
 
     if mode == "scratch":
-        plan = run_planner(task, provider=provider, attachment_path=attachment_path, memory_str=mem_str)
+        plan = run_build_plan_prompt(task, provider=provider, attachment_path=attachment_path, memory_str=mem_str)
         global_css(project_root, plan_file)
         if plan is None: return
         run_executor(plan_file=plan_file, provider=provider, max_workers=max_workers, memory_str=mem_str)
@@ -436,21 +437,21 @@ def run_pipeline(
     print(f"[Pipeline] Project target active. Directing browser environment to: {dev_url}")
     webbrowser.open(dev_url)
 
-    # try:
-    #     # Keeps Python context alive so your server stays running until you hit Ctrl+C
-    #     runtime_server.wait()
-    # except KeyboardInterrupt:
-    #     print("\n[Pipeline] Terminating live server runtime environment.")
-    #     runtime_server.terminate()
+    try:
+        # Keeps Python context alive so your server stays running until you hit Ctrl+C
+        runtime_server.wait()
+    except KeyboardInterrupt:
+        print("\n[Pipeline] Terminating live server runtime environment.")
+        runtime_server.terminate()
 
 
 if __name__ == "__main__":
     run_pipeline(
-        task="create a website for DragonBall",
+        task="create a OTT platfom with modern UI",
         provider="gemini", # gemini | groq | cerebras | openrouter
         mode="scratch",  # scratch | build | assigner | fix
         max_workers=4,
         fix_cycles=5,
-        project_root="DragonBall",   
+        project_root="OTT", 
         template_path="template/web" 
     )

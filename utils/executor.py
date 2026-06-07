@@ -1,5 +1,19 @@
-def step_execute(context: str) -> str:
-    """Stage 2 — converts one plan step into terminal commands + full code."""
+# utils/executor.py
+"""
+v2 — Step executor prompt builder.
+
+`build_step_prompt(context)` returns the full executor prompt for one component.
+The LLM call lives in main.py; this module only owns prompt construction.
+"""
+
+from __future__ import annotations
+
+
+def build_step_prompt(context: str) -> str:
+    """
+    Convert a plan-step context dict (serialised as JSON string) into the
+    full executor prompt that asks the LLM for a structured implementation plan.
+    """
     return f"""You are a senior frontend code generation engine. Output ONLY valid JSON — no markdown, no explanation.
 
 TASK: Convert the context into a structured execution plan for ONE component only.
@@ -10,14 +24,14 @@ RULES:
 - Steps relate ONLY to the component in context — nothing else
 - Terminal command step is always required
 - Never generate index.css or any global style file
-- shadcn/ui is already initialized — never generate "npx shadcn@latest init"
+- shadcn/ui is already initialised — never generate "npx shadcn@latest init"
 - Only add shadcn components actually needed
 - All code is production-ready, responsive, accessible
 - Hardcode all content inside the component (no external props for primary content)
 - Use const data=[...] / useState([...]) / local objects — never empty placeholders
 - Mobile-first responsive design
 - Dark mode support via Tailwind theme classes
-- All Tetminal commands must Windows-compatible (e.g. use 'dir' instead of 'ls', avoid '&&' chaining, etc.)
+- All Terminal commands must be Windows-compatible (use 'dir' instead of 'ls', avoid '&&' chaining)
 
 FILE DEDUPLICATION RULES (critical):
 - "File Creation" step creates the empty file

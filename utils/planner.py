@@ -1,4 +1,15 @@
 # utils/planner.py
+"""
+v2 — Website planner prompt builder.
+
+`build_plan_prompt(task, memory_str)` returns the full planner prompt.
+The actual LLM call is handled by main.py / the pipeline orchestrator,
+keeping prompt construction cleanly separated from I/O.
+"""
+
+from __future__ import annotations
+
+# ── CSS reference ─────────────────────────────────────────────────────────────
 
 _CSS_REFERENCE = (
     '@import "tailwindcss";\n@import "tw-animate-css";\n@import "shadcn/tailwind.css";\n'
@@ -21,7 +32,6 @@ _CSS_REFERENCE = (
     "  --color-sidebar-border: var(--sidebar-border); --color-sidebar-ring: var(--sidebar-ring);\n"
     "  --radius-sm: calc(var(--radius)*0.6); --radius-md: calc(var(--radius)*0.8);\n"
     "  --radius-lg: var(--radius); --radius-xl: calc(var(--radius)*1.4);\n"
-    "  --radius-2xl: calc(var(--radius)*1.8); --radius-3xl: calc(var(--radius)*2.2); --radius-4xl: calc(var(--radius)*2.6);\n"
     "}\n\n"
     ":root {\n"
     "  --background:oklch(0.98 0.002 280); --foreground:oklch(0.18 0.01 280);\n"
@@ -32,12 +42,6 @@ _CSS_REFERENCE = (
     "  --accent:oklch(0.92 0.03 285); --accent-foreground:oklch(0.22 0.03 285);\n"
     "  --destructive:oklch(0.65 0.22 25); --border:oklch(0.88 0.01 280);\n"
     "  --input:oklch(0.88 0.01 280); --ring:oklch(0.62 0.23 285); --radius:0.75rem;\n"
-    "  --chart-1:oklch(0.72 0.20 285); --chart-2:oklch(0.65 0.16 260);\n"
-    "  --chart-3:oklch(0.58 0.13 240); --chart-4:oklch(0.50 0.10 220); --chart-5:oklch(0.42 0.08 200);\n"
-    "  --sidebar:oklch(0.96 0.01 280); --sidebar-foreground:oklch(0.18 0.01 280);\n"
-    "  --sidebar-primary:oklch(0.62 0.23 285); --sidebar-primary-foreground:oklch(0.98 0 0);\n"
-    "  --sidebar-accent:oklch(0.92 0.03 285); --sidebar-accent-foreground:oklch(0.22 0.03 285);\n"
-    "  --sidebar-border:oklch(0.88 0.01 280); --sidebar-ring:oklch(0.62 0.23 285);\n"
     "}\n\n"
     ".dark {\n"
     "  --background:oklch(0.13 0.02 285); --foreground:oklch(0.96 0.01 285);\n"
@@ -48,17 +52,11 @@ _CSS_REFERENCE = (
     "  --accent:oklch(0.26 0.05 285); --accent-foreground:oklch(0.98 0 0);\n"
     "  --destructive:oklch(0.68 0.22 25); --border:oklch(1 0 0/8%); --input:oklch(1 0 0/12%);\n"
     "  --ring:oklch(0.72 0.24 285);\n"
-    "  --chart-1:oklch(0.78 0.22 285); --chart-2:oklch(0.70 0.18 265);\n"
-    "  --chart-3:oklch(0.62 0.14 245); --chart-4:oklch(0.54 0.11 225); --chart-5:oklch(0.46 0.09 205);\n"
-    "  --sidebar:oklch(0.16 0.025 285); --sidebar-foreground:oklch(0.96 0.01 285);\n"
-    "  --sidebar-primary:oklch(0.72 0.24 285); --sidebar-primary-foreground:oklch(0.12 0.01 285);\n"
-    "  --sidebar-accent:oklch(0.24 0.04 285); --sidebar-accent-foreground:oklch(0.96 0.01 285);\n"
-    "  --sidebar-border:oklch(1 0 0/8%); --sidebar-ring:oklch(0.72 0.24 285);\n"
     "}\n\n"
     "@layer base { * { @apply border-border outline-ring/50; } body { @apply bg-background text-foreground; } html { @apply font-sans; } }"
 )
 
-code = """
+_SOCIAL_ICON_NOTE = """
 import { Hash, Link2, ExternalLink, Share2 } from "lucide-react";
 
 const socials = [
@@ -67,78 +65,34 @@ const socials = [
   { icon: Hash,         label: "Twitter",  href: "#" },
   { icon: Share2,       label: "Facebook", href: "#" },
 ];
-
-
 """
 
-# Injected into the final App.tsx step prompt
 _APP_ROUTING_INSTRUCTIONS = """
 FINAL STEP — App.tsx ROUTING & COMPOSITION
 
 App.tsx handles routing only. Never recreate or re-implement any component.
 
 STRICT RULES:
-1. Import every component/page by its EXACT filename stem:
-     import Navbar   from './components/Navbar'
-     import Footer   from './components/Footer'
-     import HomePage from './pages/HomePage'
-
+1. Import every component/page by its EXACT filename stem.
 2. Use the declared export_default name for each import.
-
 3. Route paths MUST match the "route" field in the registry.
-
 4. Navbar and Footer are persistent — render them OUTSIDE <Switch>.
-
-5. Navbar links:
-   - Page routes  → use wouter <Link href="/route">
-   - Same-page sections → use anchor <a href="#section-id">
-   The "nav_links" field in the registry lists every link the navbar needs.
-
-6. Footer quick links mirror the same section ids:
-   - Page links  → <Link href="/route">
-   - Section anchors → <a href="#section-id">
-   The "footer_links" field lists every quick link the footer needs.
-
-7. Every page/section root element already has its id applied inside its
-   own file — App.tsx does NOT add ids. It only composes and routes.
-
+5. Navbar links: page routes → wouter <Link href="/route">; same-page sections → <a href="#section-id">.
+6. Footer quick links mirror the same section ids/routes.
+7. Every page/section root element already has its id applied inside its own file — App.tsx does NOT add ids.
 8. export default App at the bottom.
-
-EXAMPLE:
-import { Router, Route, Switch } from 'wouter'
-import Navbar    from './components/Navbar'     // id="navbar"
-import Footer    from './components/Footer'     // id="footer"
-import HomePage  from './pages/HomePage'        // id="home",  route="/"
-import AboutPage from './pages/AboutPage'       // id="about", route="/about"
-
-export default function App() {
-  return (
-    <Router>
-      <Navbar />
-      <Switch>
-        <Route path="/"      component={HomePage}  />
-        <Route path="/about" component={AboutPage} />
-      </Switch>
-      <Footer />
-    </Router>
-  )
-}
-
-Navbar uses:
-  <a href="#hero">Hero</a>          ← same-page anchor
-  <Link href="/about">About</Link>  ← page route
-
-Footer uses:
-  <a href="#hero">Back to top</a>
-  <Link href="/about">About</Link>
-  <a href="#contact">Contact</a>
 """
 
 
-def planner(prompt: str) -> str:
+def build_plan_prompt(task: str, memory_str: str = "") -> str:
+    """
+    Return the full planner system prompt for a given website task.
+    Inject optional memory context at the top.
+    """
     return f"""You are an AI Website Planner. Output ONLY raw JSON — no markdown, no explanation.
 
-TASK: {prompt}
+{memory_str}
+TASK: {task}
 
 STACK (pre-installed): React+TS, TailwindCSS v4, shadcn/ui, wouter, lucide-react, Geist font.
 DO NOT generate: installs, git, folder setup, shadcn init, tailwind setup.
@@ -154,16 +108,12 @@ RULES:
 - global_css must be COMPLETE — adapt colors to match requested theme
 - Use oklch() color space
 - Use wouter for routing
-- no need to generate the entire tsx file code thats will do by your giving prompt
 
 ID RULES:
 - Navbar root:   id="navbar"
 - Footer root:   id="footer"
 - Every page/section root: id matching its registry entry
-- Navbar nav links use href="#section-id" for same-page, href="/route" for pages
-- Footer quick links mirror the same ids/routes
-- in links like github, linkedin, twitter, facebook means use this {code}. just metion in using placing. in prompt
-
+- For social icons use: {_SOCIAL_ICON_NOTE}
 
 CSS REFERENCE (adapt hue/lightness to match theme, keep structure):
 {_CSS_REFERENCE}
@@ -187,24 +137,8 @@ OUTPUT SCHEMA:
         "route": null,
         "type": "persistent",
         "nav_links": [
-          {{"label": "Home",    "href": "/",        "type": "route"}},
-          {{"label": "Hero",    "href": "#hero",    "type": "anchor"}},
-          {{"label": "About",   "href": "/about",   "type": "route"}},
-          {{"label": "Contact", "href": "#contact", "type": "anchor"}}
-        ]
-      }},
-      {{
-        "name": "Footer",
-        "filename": "src/components/Footer.tsx",
-        "export_default": "Footer",
-        "id": "footer",
-        "route": null,
-        "type": "persistent",
-        "footer_links": [
-          {{"label": "Home",    "href": "/",        "type": "route"}},
-          {{"label": "Hero",    "href": "#hero",    "type": "anchor"}},
-          {{"label": "About",   "href": "/about",   "type": "route"}},
-          {{"label": "Contact", "href": "#contact", "type": "anchor"}}
+          {{"label": "Home",  "href": "/",      "type": "route"}},
+          {{"label": "Hero",  "href": "#hero",  "type": "anchor"}}
         ]
       }},
       {{
@@ -215,8 +149,7 @@ OUTPUT SCHEMA:
         "route": "/",
         "type": "page",
         "sections": [
-          {{"name": "Hero",    "id": "hero"}},
-          {{"name": "Contact", "id": "contact"}}
+          {{"name": "Hero", "id": "hero"}}
         ]
       }}
     ]
@@ -226,14 +159,9 @@ OUTPUT SCHEMA:
       "framework": "tailwindcss",
       "version": "4",
       "global_css": "FULL CSS — no placeholders",
-      "styling_name": ["bg-background","text-foreground","bg-card","text-card-foreground",
-        "bg-primary","text-primary-foreground","bg-secondary","text-secondary-foreground",
-        "bg-muted","text-muted-foreground","bg-accent","text-accent-foreground",
-        "bg-destructive","border-border","ring-ring"],
+      "styling_name": ["bg-background","text-foreground","bg-primary","text-primary-foreground"],
       "gradients": {{
-        "hero": "bg-gradient-to-br from-primary to-secondary",
-        "cta":  "bg-gradient-to-r from-primary via-accent to-secondary",
-        "card": "bg-gradient-to-b from-card to-muted"
+        "hero": "bg-gradient-to-br from-primary to-secondary"
       }}
     }}
   }},
@@ -250,8 +178,7 @@ OUTPUT SCHEMA:
         "route": null,
         "type": "persistent",
         "nav_links": [
-          {{"label":"Home","href":"/","type":"route"}},
-          {{"label":"Hero","href":"#hero","type":"anchor"}}
+          {{"label":"Home","href":"/","type":"route"}}
         ],
         "bg": "bg-background",
         "text": "text-foreground",
@@ -261,19 +188,12 @@ OUTPUT SCHEMA:
   ]
 }}
 
-LAST STEP — App.tsx prompt MUST include this registry table:
+LAST STEP — App.tsx prompt MUST include this routing registry table:
 
 | name      | filename                       | export_default | id      | route   | type       |
 |-----------|--------------------------------|----------------|---------|---------|------------|
 | Navbar    | src/components/Navbar.tsx      | Navbar         | navbar  | null    | persistent |
 | Footer    | src/components/Footer.tsx      | Footer         | footer  | null    | persistent |
 | HomePage  | src/pages/HomePage.tsx         | HomePage       | home    | /       | page       |
-| AboutPage | src/pages/AboutPage.tsx        | AboutPage      | about   | /about  | page       |
-
-Section ids inside pages (for anchor links):
-| page      | section name | section id |
-|-----------|-------------|------------|
-| HomePage  | Hero         | hero       |
-| HomePage  | Contact      | contact    |
 
 {_APP_ROUTING_INSTRUCTIONS}"""
