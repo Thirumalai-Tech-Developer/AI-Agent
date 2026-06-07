@@ -8,7 +8,18 @@
 ## 📊 Code Statistics
 
 <!-- LOC_STATS_START -->
-Loading...
+| Language | Code Lines |
+|----------|-----------:|
+| Python | 1,594 |
+| CSS | 295 |
+| JSON | 137 |
+| SVG | 27 |
+| TypeScript | 26 |
+| JavaScript | 21 |
+| TSX | 19 |
+| HTML | 13 |
+| **Total** | **2,132** |
+
 <!-- LOC_STATS_END -->
 
 ---
