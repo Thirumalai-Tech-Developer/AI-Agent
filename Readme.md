@@ -3,9 +3,14 @@
 [![Styling Engine](https://img.shields.io/badge/CSS-Tailwind%20v4-38bdf8.svg)](https://tailwindcss.com/)
 [![Pipeline Status](https://img.shields.io/badge/Pipeline-Active-success.svg)](#)
 
-## 📺 Pipeline Demo
+## 📺 Demo Walkthrough
 
-[Video Demo](assert/video.mp4)
+<p align="center">
+  <video src="https://github.com/Thirumalai-Tech-Developer/AI-Agent/raw/master/assert/video.mp4" controls width="100%" muted>
+    Your browser does not support the video tag. 
+    You can view the video file directly <a href="https://github.com/Thirumalai-Tech-Developer/AI-Agent/raw/master/assert/video.mp4">here</a>.
+  </video>
+</p>
 
 ```python
 readme_content = """# AI Front-End Scaffolding Pipeline 🚀
