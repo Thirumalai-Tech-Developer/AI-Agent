@@ -1,0 +1,89 @@
+name: Update LOC Stats
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  loc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tokei
+        run: cargo install tokei
+
+      - name: Generate Stats
+        run: |
+          echo "| Language | Code Lines |" > stats.md
+          echo "|----------|-----------:|" >> stats.md
+
+          tokei --output json . > tokei.json
+
+          python3 << 'EOF'
+          import json
+
+          with open("tokei.json") as f:
+              data = json.load(f)
+
+          total = 0
+          rows = []
+
+          for lang, info in data.items():
+              if lang == "Total":
+                  continue
+
+              code = info.get("code", 0)
+
+              if code > 0:
+                  rows.append((lang, code))
+                  total += code
+
+          rows.sort(key=lambda x: x[1], reverse=True)
+
+          with open("stats.md", "a") as out:
+              for lang, code in rows:
+                  out.write(f"| {lang} | {code:,} |\n")
+
+              out.write(f"| **Total** | **{total:,}** |\n")
+          EOF
+
+      - name: Update README
+        run: |
+          python3 << 'EOF'
+          import re
+
+          readme = open("README.md","r",encoding="utf-8").read()
+          stats = open("stats.md","r",encoding="utf-8").read()
+
+          pattern = r'<!-- LOC_STATS_START -->.*?<!-- LOC_STATS_END -->'
+
+          replacement = f'''<!-- LOC_STATS_START -->
+          {stats}
+          <!-- LOC_STATS_END -->'''
+
+          readme = re.sub(pattern, replacement, readme, flags=re.S)
+
+          open("README.md","w",encoding="utf-8").write(readme)
+          EOF
+
+      - name: Commit Changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add README.md
+
+          git diff --staged --quiet || git commit -m "Update LOC stats"
+
+          git push
