@@ -5,9 +5,7 @@
 
 ## 📺 Pipeline Demo
 
-<video src="assert/video.mp4" controls width="100%" muted>
-  Your browser does not support the video tag. You can view the video directly <a href="assert/video.mp4">here</a>.
-</video>
+[Video Demo](assert/video.mp4)
 
 ```python
 readme_content = """# AI Front-End Scaffolding Pipeline 🚀
