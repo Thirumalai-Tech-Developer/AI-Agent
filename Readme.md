@@ -6,10 +6,13 @@
 ## 📺 Demo Walkthrough
 
 <p align="center">
-  <video src="https://github.com/Thirumalai-Tech-Developer/AI-Agent/raw/master/assert/video.mp4" controls width="100%" muted>
-    Your browser does not support the video tag. 
-    You can view the video file directly <a href="https://github.com/Thirumalai-Tech-Developer/AI-Agent/raw/master/assert/video.mp4">here</a>.
-  </video>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assert/video.webp">
+    
+    <source media="(prefers-color-scheme: light)" srcset="./assert/video.webp">
+    
+    <img src="./assert/video.webp" alt="AI Scaffolding Pipeline Demo" width="100%">
+  </picture>
 </p>
 
 ```python
