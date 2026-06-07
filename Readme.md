@@ -5,14 +5,6 @@
 
 ---
 
-## 📊 Code Statistics
-
-<!-- LOC_STATS_START -->
-Loading...
-<!-- LOC_STATS_END -->
-
----
-
 ## 📺 Demo Walkthrough
 
 <p align="center">
