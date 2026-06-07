@@ -74,7 +74,7 @@ jobs:
 
           readme = re.sub(pattern, replacement, readme, flags=re.S)
 
-          open("README.md","w",encoding="utf-8").write(readme)
+          open("Readme.md","w",encoding="utf-8").write(readme)
           EOF
 
       - name: Commit Changes
