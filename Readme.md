@@ -3,17 +3,18 @@
 [![Styling Engine](https://img.shields.io/badge/CSS-Tailwind%20v4-38bdf8.svg)](https://tailwindcss.com/)
 [![Pipeline Status](https://img.shields.io/badge/Pipeline-Active-success.svg)](#)
 
+---
+
 ## 📺 Demo Walkthrough
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./assert/video.webp">
-    
-    <source media="(prefers-color-scheme: light)" srcset="./assert/video.webp">
-    
-    <img src="./assert/video.webp" alt="AI Scaffolding Pipeline Demo" width="100%">
+    <img src="./assert/video.webp" alt="AI Scaffolding Pipeline Demo" width="60%">
   </picture>
 </p>
+
+---
 
 ```python
 readme_content = """# AI Front-End Scaffolding Pipeline 🚀
