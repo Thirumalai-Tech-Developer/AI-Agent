@@ -63,7 +63,7 @@ jobs:
           python3 << 'EOF'
           import re
 
-          readme = open("README.md","r",encoding="utf-8").read()
+          readme = open("Readme.md","r",encoding="utf-8").read()
           stats = open("stats.md","r",encoding="utf-8").read()
 
           pattern = r'<!-- LOC_STATS_START -->.*?<!-- LOC_STATS_END -->'
