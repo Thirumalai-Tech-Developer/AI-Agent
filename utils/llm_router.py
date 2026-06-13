@@ -158,6 +158,7 @@ class LLMRouter:
         model:            str | None = None,
         max_key_retries:  int  = None,
         max_srv_retries:  int  = 5,
+        structured_response: str = "",
     ) -> str:
         keys           = _get_keys(provider)
         max_key_retries = max_key_retries or len(keys)
@@ -171,7 +172,11 @@ class LLMRouter:
             try:
                 llm    = _build_model(provider, api_key, model)
                 output = ""
-                for chunk in llm.stream(messages):
+                for chunk in llm.stream(messages, config=
+                                        {
+                                            "response_format": {"text": {"mime_type": "application/json", "schema": Recipe.model_json_schema()}},
+                                        }
+                                        ):
                     token = chunk.content or ""
                     print(token, end="", flush=True)
                     output += token

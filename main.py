@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import subprocess
 import webbrowser
 from tqdm import tqdm
+from pydantic import BaseModel
 
 from utils import extractor
 from utils.executor import build_step_prompt
@@ -17,6 +18,8 @@ from utils.error_fixer import run_auto_fix
 from utils.assigner import run_task, code_assigner
 from utils.memory import AgenticMemory
 from utils.validator import run_static_linter
+from utils.planner_v2 import WebsitePlan
+from utils.executor_v2 import Task
 
 load_dotenv()
 
@@ -44,8 +47,9 @@ def log_to_dataset(prompt: str, response: str, provider: str):
 
 # ── Raw provider calls ─────────────────────────────────────────────────────────
 
-def _call_groq_raw(api_key: str, prompt: str, model: str) -> str:
+def _call_groq_raw(api_key: str, prompt: str, model: str, structure: BaseModel) -> str:
     from groq import Groq
+    from groq.types import GenerateContentConfig
     client = Groq(api_key=api_key)
     completion = client.chat.completions.create(
         model=model,
@@ -54,6 +58,10 @@ def _call_groq_raw(api_key: str, prompt: str, model: str) -> str:
             {"role": "user",   "content": prompt},
         ],
         temperature=0.6, top_p=1, stream=True,
+        config=GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=structure,
+        )
     )
     full_output = ""
     for chunk in completion:
@@ -64,7 +72,7 @@ def _call_groq_raw(api_key: str, prompt: str, model: str) -> str:
     log_to_dataset(prompt, full_output, "groq")
     return full_output
 
-def _call_gemini_raw(api_key: str, prompt: str, model: str) -> str:
+def _call_gemini_raw(api_key: str, prompt: str, model: str, structure: BaseModel) -> str:
     from google import genai
     from google.genai.types import GenerateContentConfig
     client = genai.Client(api_key=api_key)
@@ -72,7 +80,8 @@ def _call_gemini_raw(api_key: str, prompt: str, model: str) -> str:
         model=model,
         contents=prompt,
         config=GenerateContentConfig(
-            system_instruction="You are a strict JSON generator. Always return valid JSON only."
+            response_mime_type="application/json",
+            response_schema=structure,
         )
     )
     full_output = ""
@@ -84,8 +93,9 @@ def _call_gemini_raw(api_key: str, prompt: str, model: str) -> str:
     log_to_dataset(prompt, full_output, "gemini")
     return full_output
 
-def _call_cerebras_raw(api_key: str, prompt: str, model: str) -> str:
+def _call_cerebras_raw(api_key: str, prompt: str, model: str, structure: BaseModel) -> str:
     from cerebras.cloud.sdk import Cerebras
+    from google.genai.types import GenerateContentConfig
     client = Cerebras(api_key=api_key)
     completion = client.chat.completions.create(
         model=model,
@@ -94,6 +104,10 @@ def _call_cerebras_raw(api_key: str, prompt: str, model: str) -> str:
             {"role": "user",   "content": prompt},
         ],
         temperature=0.6, stream=True,
+        config=GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=structure,
+        )
     )
     full_output = ""
     for chunk in completion:
@@ -104,7 +118,7 @@ def _call_cerebras_raw(api_key: str, prompt: str, model: str) -> str:
     log_to_dataset(prompt, full_output, "cerebras")
     return full_output
 
-def _call_openrouter_raw(api_key: str, prompt: str, model: str) -> str:
+def _call_openrouter_raw(api_key: str, prompt: str, model: str, structure: BaseModel) -> str:
     from openai import OpenAI
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     completion = client.chat.completions.create(
@@ -114,7 +128,14 @@ def _call_openrouter_raw(api_key: str, prompt: str, model: str) -> str:
             {"role": "user",   "content": prompt},
         ],
         temperature=0.6, stream=True,
+        response_format={
+            "type": "json_object",
+            "json_object": {
+                "schema": structure.model_json_schema()
+            }
+        }
     )
+
     full_output = ""
     for chunk in completion:
         token = chunk.choices[0].delta.content or ""
@@ -123,6 +144,7 @@ def _call_openrouter_raw(api_key: str, prompt: str, model: str) -> str:
     print()
     log_to_dataset(prompt, full_output, "openrouter")
     return full_output
+
 def global_css(project_root: str, plan_path: str) -> None:
     with open(plan_path, "r", encoding="utf-8") as f:
         plan = json.load(f)
@@ -135,12 +157,17 @@ def global_css(project_root: str, plan_path: str) -> None:
         plan = plan[0]
         
     # 2. Defensive Layer: Safely extract 'config' dict
+    
     config = plan.get("config", {}) if isinstance(plan, dict) else {}
-    if isinstance(config, list) and config:
-        config = config[0]
+    print(f"[Global CSS] Extracted config: {config}")
+    if config.get("styling"):
+        config = config.get("styling", {})
+    elif not isinstance(config, dict):
+        config = config
         
+    styling = config
     # 3. Safely extract styling
-    styling = config.get("styling", "") if isinstance(config, dict) else ""
+    # styling = plan.get("styling", "") if isinstance(plan, dict) else ""
     
     # 4. Handle edge-case object structures generated by the LLM
     if isinstance(styling, dict):
@@ -159,31 +186,36 @@ def global_css(project_root: str, plan_path: str) -> None:
     css_path = f"{project_root}/src/index.css"
     os.makedirs(os.path.dirname(css_path), exist_ok=True)
     code_assigner(css_path, styling)
+
 # ── Public calls with key rotation ────────────────────────────────────────────
+def call_groq(prompt: str, model: str = "meta-llama/llama-4-scout-17b-16e-instruct", structure: BaseModel = WebsitePlan) -> str:
+    return with_key_rotation("groq", _call_groq_raw, prompt, model=model, structure=structure)
 
-def call_groq(prompt: str, model: str = "meta-llama/llama-4-scout-17b-16e-instruct") -> str:
-    return with_key_rotation("groq", _call_groq_raw, prompt, model=model)
+def call_gemini(prompt: str, model: str = "gemini-3-flash-preview", structure: BaseModel = WebsitePlan) -> str:
+    return with_key_rotation("gemini", _call_gemini_raw, prompt, model=model, structure=structure)
 
-def call_gemini(prompt: str, model: str = "gemini-3-flash-preview") -> str:
-    return with_key_rotation("gemini", _call_gemini_raw, prompt, model=model)
+def call_cerebras(prompt: str, model: str = "zai-glm-4.7", structure: BaseModel = WebsitePlan) -> str:
+    return with_key_rotation("cerebras", _call_cerebras_raw, prompt, model=model, structure=structure)
 
-def call_cerebras(prompt: str, model: str = "zai-glm-4.7") -> str:
-    return with_key_rotation("cerebras", _call_cerebras_raw, prompt, model=model)
-
-def call_openrouter(prompt: str, model: str = "openai/gpt-oss-120b:free") -> str:
-    return with_key_rotation("openrouter", _call_openrouter_raw, prompt, model=model)
+def call_openrouter(prompt: str, model: str = "nvidia/nemotron-3-ultra-550b-a55b:free", structure: BaseModel = WebsitePlan) -> str:
+    return with_key_rotation("openrouter", _call_openrouter_raw, prompt, model=model, structure=structure)
 
 PROVIDERS = {
     "groq":       lambda p: with_key_rotation("groq", _call_groq_raw, p, "meta-llama/llama-4-scout-17b-16e-instruct"),
-    "gemini":     lambda p: with_key_rotation("gemini", _call_gemini_raw, p, "gemini-3.5-flash"),
-    "cerebras":   lambda p: with_key_rotation("cerebras", _call_cerebras_raw, p, "zai-glm-4.7"),
-    "openrouter": lambda p: with_key_rotation("openrouter", _call_openrouter_raw, p, "openai/gpt-oss-120b:free"),
+    "gemini":     lambda p: with_key_rotation("gemini", _call_gemini_raw, p, "gemini-3.5-flash", structure=WebsitePlan),
+    "cerebras":   lambda p: with_key_rotation("cerebras", _call_cerebras_raw, p, "zai-glm-4.7", structure=WebsitePlan),
+    "openrouter": lambda p: with_key_rotation("openrouter", _call_openrouter_raw, p, "nvidia/nemotron-3-ultra-550b-a55b:free", structure=WebsitePlan),
 }
 
-def call_llm(prompt: str, provider: str = "gemini") -> str:
-    if provider not in PROVIDERS:
-        raise ValueError(f"Unknown provider '{provider}'.")
-    return PROVIDERS[provider](prompt)
+def call_llm(prompt: str, provider: str = "gemini", structure: BaseModel = WebsitePlan) -> str:
+    if provider == "gemini":
+        return call_gemini(prompt, structure=structure)
+    elif provider == "groq":
+        return call_groq(prompt, structure=structure)
+    elif provider == "cerebras":
+        return call_cerebras(prompt, structure=structure)
+    elif provider == "openrouter":
+        return call_openrouter(prompt, structure=structure)
 
 def save_json(path: str, raw_output: str, label: str = "") -> dict | None:
     result = extract_json(raw_output)
@@ -226,13 +258,13 @@ def _is_app_step(step: dict) -> bool:
     files = [i.get("filename", "") for i in step.get("input", [])]
     return "app" in name or any("App.tsx" in f for f in files)
 
-def _run_step(i: int, step: dict, plan: dict, provider: str, memory_str: str = "") -> tuple[int, dict | None]:
+def _run_step(i: int, step: dict, plan: dict, provider: str, memory_str: str = "", structure: BaseModel = WebsitePlan) -> tuple[int, dict | None]:
     try:
         is_app  = _is_app_step(step)
         context = _build_step_context(step, plan, is_app_step=is_app, memory_str=memory_str)
         prompt  = build_step_prompt(context)
         
-        raw  = call_llm(prompt, provider=provider)
+        raw  = call_llm(prompt, provider=provider, structure=structure)
         data = save_json(f"{STEP_PATH}/{i}.json", raw, label=f"step_{i}")
         return i, data
     except Exception as e:
@@ -242,13 +274,13 @@ def _run_step(i: int, step: dict, plan: dict, provider: str, memory_str: str = "
         traceback.print_exc()
         return i, None
 
-def run_build_plan_prompt(task: str, provider: str = "gemini", attachment_path: str = None, memory_str: str = "") -> dict | None:
+def run_build_plan_prompt(task: str, provider: str = "gemini", attachment_path: str = None, memory_str: str = "", structure: BaseModel = WebsitePlan) -> dict | None:
     if attachment_path:
         task += f"\n\nAttachment context:\n{extractor.extract_text_from_pdf(attachment_path)}"
-    raw = call_llm(build_plan_prompt(f"{memory_str}\nTask: {task}"), provider=provider)
+    raw = call_llm(build_plan_prompt(f"{memory_str}\nTask: {task}"), provider=provider, structure=structure)
     return save_json("outputs/plan/plan.json", raw, label="plan")
 
-def run_executor(plan_file: str, provider: str, max_workers: int, memory_str: str = "") -> None:
+def run_executor(plan_file: str, provider: str, max_workers: int, memory_str: str = "", structure: BaseModel = WebsitePlan) -> None:
     # 1. Fresh start: clear out previous stale run artifacts if they exist
     if os.path.exists(STEP_PATH):
         shutil.rmtree(STEP_PATH)
@@ -304,7 +336,7 @@ def run_executor(plan_file: str, provider: str, max_workers: int, memory_str: st
     if normal_indices:
         print(f"[Executor] Dispatching {len(normal_indices)} components across {max_workers} worker threads...")
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = {pool.submit(_run_step, i, steps[i], plan, provider, memory_str): i for i in normal_indices}
+            futures = {pool.submit(_run_step, i, steps[i], plan, provider, memory_str, structure=Task): i for i in normal_indices}
             for future in as_completed(futures):
                 try:
                     future.result()
@@ -314,7 +346,7 @@ def run_executor(plan_file: str, provider: str, max_workers: int, memory_str: st
     if app_indices:
         print(f"[Executor] Sequential processing for App components: {app_indices}")
         for i in app_indices:
-            _run_step(i, steps[i], plan, provider, memory_str)
+            _run_step(i, steps[i], plan, provider, memory_str, structure=Task)
 
 def run_assigner(project_root: str = "spiderman", step_dir: str = STEP_PATH, max_workers: int = None):
     if not os.path.exists(step_dir): 
@@ -336,10 +368,10 @@ def run_assigner(project_root: str = "spiderman", step_dir: str = STEP_PATH, max
             
     print(f"\n[Assigner] ✓ All {total_tasks} sequential operations applied safely.")
 
-def run_fixer(provider: str, url: str, project_root: str, max_cycles: int, memory: AgenticMemory):
+def run_fixer(provider: str, url: str, project_root: str, max_cycles: int, memory: AgenticMemory, structure: BaseModel = WebsitePlan):
     print("\n" + "="*60 + "\n  STAGE 3: AUTO-FIX LOOP WITH MEMORY REFLECTION\n" + "="*60)
     run_auto_fix(
-        call_llm     = lambda prompt: call_llm(prompt, provider=provider),
+        call_llm     = lambda prompt: call_llm(prompt, provider=provider, structure=structure),
         extract_json = extract_json,
         url          = url,
         project_root = project_root,
@@ -403,7 +435,7 @@ def run_pipeline(
             time.sleep(3) # Give server a brief window to bind to host port
             
             try:
-                run_fixer(provider, dev_url, project_root, fix_cycles, memory)
+                run_fixer(provider, dev_url, project_root, fix_cycles, memory, structure=WebsitePlan)
             finally:
                 fix_server.terminate() # Tear down temporary background validation instance
 
@@ -418,7 +450,7 @@ def run_pipeline(
         )
         time.sleep(3)
         try:
-            run_fixer(provider, dev_url, project_root, fix_cycles, memory)
+            run_fixer(provider, dev_url, project_root, fix_cycles, memory, structure=WebsitePlan)
         finally:
             fix_server.terminate()
 
@@ -447,11 +479,11 @@ def run_pipeline(
 
 if __name__ == "__main__":
     run_pipeline(
-        task="create a OTT platfom with modern UI",
+        task="create one piece landing pages",
         provider="gemini", # gemini | groq | cerebras | openrouter
-        mode="scratch",  # scratch | build | assigner | fix
+        mode="build",  # scratch | build | assigner | fix
         max_workers=4,
         fix_cycles=5,
-        project_root="OTT", 
+        project_root="OP", 
         template_path="template/web" 
     )

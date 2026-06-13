@@ -131,6 +131,7 @@ def with_key_rotation(
     *args,
     max_retries: int = None,
     max_server_retries: int = 5,
+    structure,
     **kwargs,
 ):
     """
@@ -149,7 +150,7 @@ def with_key_rotation(
     while key_attempt < max_retries:
         api_key = _router.current(provider)
         try:
-            return fn(api_key, *args, **kwargs)
+            return fn(api_key, *args, **kwargs, structure=structure)
 
         except Exception as e:
             err = str(e)
